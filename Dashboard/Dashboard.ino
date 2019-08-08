@@ -36,22 +36,90 @@
 // other pins
 #define BOARD_LED_PIN 13
 
-void ledOn() {
-  digitalWrite(BOARD_LED_PIN, HIGH);  
+const int window = 4;
+int readIdx = 0;
+
+int mainWheel = 0;
+int mainWheelReadings[window];
+int mainWheelTotal = 0;
+int mainWheelAvg = 0;
+
+int blinkSlide = 0;
+int blinkSlideReadings[window];
+int blinkSlideTotal = 0;
+int blinkSlideAvg = 0;
+
+bool fllButtonPressed = false;
+int fllButtonTime = 0;
+int debounceTime = 100;
+
+void fllCallback()
+{
+  if(digitalRead(FAST_LOOK_LEFT_BUTTON) == LOW)
+  {
+    fllButtonPressed = true;
+    fllButtonTime = millis();
+  }
 }
 
-void ledOff() {
-  digitalWrite(BOARD_LED_PIN, LOW);  
+bool fllPressed()
+{
+  if(fllButtonPressed && millis() - fllButtonTime >= debounceTime)
+  {
+    fllButtonPressed = false;
+    return true;
+  }
+  return false;
+}
+
+void ledOn()
+{
+  digitalWrite(BOARD_LED_PIN, HIGH);
+}
+
+void ledOff()
+{
+  digitalWrite(BOARD_LED_PIN, LOW);
 }
 
 void setup() {
   pinMode(BOARD_LED_PIN, OUTPUT);
   digitalWrite(BOARD_LED_PIN, LOW);
-//  pinMode(FAST_LOOK_LEFT_BUTTON, INPUT);
-  attachInterrupt(digitalPinToInterrupt(FAST_LOOK_LEFT_BUTTON), ledOn, RISING);
-//  attachInterrupt(digitalPinToInterrupt(FAST_LOOK_LEFT_BUTTON), ledOff, FALLING); 
+  
+  attachInterrupt(digitalPinToInterrupt(FAST_LOOK_LEFT_BUTTON), fllCallback, RISING);
+  
+  for (int i=0; i<window; i++) {
+    mainWheelReadings[i] = 0;
+    blinkSlideReadings[i] = 0;
+  }
+
+  Serial.begin(9600);
 }
 
 void loop() {
-  delay(1);
+  delay(100);
+  if (fllPressed())
+  {
+    // why does the light blink twice? and why does it interfere with
+    // reading the potentiometer?
+    ledOn();
+    delay(1);
+    ledOff();
+  }
+  
+  blinkSlide = analogRead(BLINK_SLIDER);
+  blinkSlideTotal = blinkSlideTotal - blinkSlideReadings[readIdx];
+  blinkSlideTotal = blinkSlideTotal + blinkSlide;
+  blinkSlideReadings[readIdx] = blinkSlide;
+  blinkSlideAvg = blinkSlideTotal / window;
+  
+  mainWheel = analogRead(MAIN_WHEEL);
+  mainWheelTotal = mainWheelTotal - mainWheelReadings[readIdx];
+  mainWheelTotal = mainWheelTotal + mainWheel;
+  mainWheelReadings[readIdx] = mainWheel;
+  mainWheelAvg = mainWheelTotal / window;
+
+  Serial.println(mainWheelAvg);
+
+  readIdx = (readIdx + 1) % window;
 }
