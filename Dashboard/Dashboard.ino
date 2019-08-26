@@ -1,3 +1,11 @@
+#include <RGBmatrixPanel.h>
+#include <gamma.h>
+
+#include <gfxfont.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SPITFT.h>
+#include <Adafruit_SPITFT_Macros.h>
+
 /*
   - LED attached from pin 13 to ground (on board)
   - button attached to pin 2 from +5V
@@ -11,7 +19,6 @@
 
 fast look left button             2
 slow look left button             3
-[EYES] blue1 (upper)              4
 [EYES] OE (output enable)         9
 [EYES] LAT (latch)               10
 [EYES] CLK (clock)               11
@@ -19,15 +26,24 @@ fast look right button           18
 slow look right button           19
 fast roll eyes button            20
 slow roll eyes button            21
+[EYES] blue1 (upper) output      26
 [EYES] blue2 (bottom) output     29
 
 [EYES] row select A              A0
 [EYES] row select B              A1
 [EYES] row select C              A2
 [EYES] row select D              A3
-
-
 */
+
+#define CLK 11
+#define OE   9
+#define LAT 10
+#define A   A0
+#define B   A1
+#define C   A2
+#define D   A3
+
+RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE, false);
 
 // varistor pin map
 /*
@@ -233,6 +249,10 @@ void setup() {
   }
 
   Serial.begin(9600);
+  matrix.begin();
+  
+  matrix.fillCircle(16, 16, 14, matrix.Color333(0, 0, 1));
+  matrix.fillCircle(19, 18, 6, matrix.Color333(0, 0, 0));
 }
 
 void loop() {
@@ -243,6 +263,8 @@ void loop() {
   if (fllPressed())
   {
     // fast look left
+    matrix.fillCircle(16, 16, 15, matrix.Color333(0, 0, 7));
+    matrix.fillCircle(8, 16, 6, matrix.Color333(0, 0, 0));
   } else if (sllPressed()) {
     // slow look left
   } else if (flrPressed()) {
@@ -261,11 +283,11 @@ void loop() {
   blinkSlideReadings[readIdx] = blinkSlide;
   blinkSlideAvg = blinkSlideTotal / window;
   
-  mainWheel = analogRead(MAIN_WHEEL);
-  mainWheelTotal = mainWheelTotal - mainWheelReadings[readIdx];
-  mainWheelTotal = mainWheelTotal + mainWheel;
-  mainWheelReadings[readIdx] = mainWheel;
-  mainWheelAvg = mainWheelTotal / window;
+//  mainWheel = analogRead(MAIN_WHEEL);
+//  mainWheelTotal = mainWheelTotal - mainWheelReadings[readIdx];
+//  mainWheelTotal = mainWheelTotal + mainWheel;
+//  mainWheelReadings[readIdx] = mainWheel;
+//  mainWheelAvg = mainWheelTotal / window;
 
   Serial.println(mainWheelAvg);
 
