@@ -81,12 +81,13 @@ int blinkSlide = 0;
 int blinkSlideReadings[window];
 int blinkSlideTotal = 0;
 int blinkSlideAvg = 0;
-
+int blinkSlideMax = 14000;
 int debounceTime = 100;
+int delayTime = 0;
 
 #define FAST_LOOK_LEFT_BUTTON  2   // fll
 bool fllButtonPressed = false;
-int fllButtonTime = 0;
+unsigned long fllButtonTime = 0;
 
 void fllCallback()
 {
@@ -109,7 +110,7 @@ bool fllPressed()
 
 #define SLOW_LOOK_LEFT_BUTTON  3   // sll
 bool sllButtonPressed = false;
-int sllButtonTime = 0;
+unsigned long sllButtonTime = 0;
 
 void sllCallback()
 {
@@ -132,7 +133,7 @@ bool sllPressed()
 
 #define FAST_LOOK_RIGHT_BUTTON 18  // flr
 bool flrButtonPressed = false;
-int flrButtonTime = 0;
+unsigned long flrButtonTime = 0;
 
 void flrCallback()
 {
@@ -155,7 +156,7 @@ bool flrPressed()
 
 #define SLOW_LOOK_RIGHT_BUTTON 19  // slr
 bool slrButtonPressed = false;
-int slrButtonTime = 0;
+unsigned long slrButtonTime = 0;
 
 void slrCallback()
 {
@@ -178,7 +179,7 @@ bool slrPressed()
 
 #define FAST_ROLL_EYES_BUTTON  20  // fre
 bool freButtonPressed = false;
-int freButtonTime = 0;
+unsigned long freButtonTime = 0;
 
 void freCallback()
 {
@@ -201,7 +202,7 @@ bool frePressed()
 
 #define SLOW_ROLL_EYES_BUTTON  21  // sre
 bool sreButtonPressed = false;
-int sreButtonTime = 0;
+unsigned long sreButtonTime = 0;
 
 void sreCallback()
 {
@@ -256,40 +257,55 @@ void setup() {
 }
 
 void loop() {
-  delay(50);
-  ledOn();
-  delay(50);
-  ledOff();
+  matrix.fillCircle(16, 16, 14, matrix.Color333(0, 0, 1));
+  matrix.fillCircle(19, 18, 6, matrix.Color333(0, 0, 0));
+
   if (fllPressed())
   {
     // fast look left
-    matrix.fillCircle(16, 16, 15, matrix.Color333(0, 0, 7));
+    matrix.fillCircle(16, 16, 15, matrix.Color333(0, 0, 1));
     matrix.fillCircle(8, 16, 6, matrix.Color333(0, 0, 0));
+    delayTime = 100;
   } else if (sllPressed()) {
     // slow look left
+    matrix.fillCircle(16, 16, 15, matrix.Color333(0, 0, 1));
+    matrix.fillCircle(8, 16, 6, matrix.Color333(0, 0, 0));
+    delayTime = 1000;
   } else if (flrPressed()) {
     // fast look right
+    matrix.fillCircle(16, 16, 15, matrix.Color333(0, 0, 1));
+    matrix.fillCircle(8, 16, 6, matrix.Color333(0, 0, 0));
+    delayTime = 100;
   } else if (slrPressed()) {
     // slow look right
+    matrix.fillCircle(16, 16, 15, matrix.Color333(0, 0, 1));
+    matrix.fillCircle(8, 16, 6, matrix.Color333(0, 0, 0));
+    delayTime = 1000;
   } else if (frePressed()) {
     // fast roll eyes
+    matrix.fillCircle(16, 16, 15, matrix.Color333(0, 0, 1));
+    matrix.fillCircle(8, 16, 6, matrix.Color333(0, 0, 0));
+    delayTime = 100;
   } else if (srePressed()) {
     // slow roll eyes
+    matrix.fillCircle(16, 16, 15, matrix.Color333(0, 0, 1));
+    matrix.fillCircle(8, 16, 6, matrix.Color333(0, 0, 0));
+    delayTime = 1000;
   }
+  delay(delayTime);
   
   blinkSlide = analogRead(BLINK_SLIDER);
   blinkSlideTotal = blinkSlideTotal - blinkSlideReadings[readIdx];
   blinkSlideTotal = blinkSlideTotal + blinkSlide;
   blinkSlideReadings[readIdx] = blinkSlide;
   blinkSlideAvg = blinkSlideTotal / window;
+  Serial.println(blinkSlideAvg);
   
 //  mainWheel = analogRead(MAIN_WHEEL);
 //  mainWheelTotal = mainWheelTotal - mainWheelReadings[readIdx];
 //  mainWheelTotal = mainWheelTotal + mainWheel;
 //  mainWheelReadings[readIdx] = mainWheel;
 //  mainWheelAvg = mainWheelTotal / window;
-
-  Serial.println(mainWheelAvg);
 
   readIdx = (readIdx + 1) % window;
 }
