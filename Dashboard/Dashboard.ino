@@ -6,6 +6,9 @@
 #include <Adafruit_SPITFT.h>
 #include <Adafruit_SPITFT_Macros.h>
 
+#include "images.h"
+#include "buttons.h"
+
 /*
   - LED attached from pin 13 to ground (on board)
   - button attached to pin 2 from +5V
@@ -82,146 +85,9 @@ int blinkSlideReadings[window];
 int blinkSlideTotal = 0;
 int blinkSlideAvg = 0;
 int blinkSlideMax = 14000;
-int debounceTime = 100;
-int delayTime = 0;
+int delayTime = 100;
 
-#define FAST_LOOK_LEFT_BUTTON  2   // fll
-bool fllButtonPressed = false;
-unsigned long fllButtonTime = 0;
-
-void fllCallback()
-{
-  if(digitalRead(FAST_LOOK_LEFT_BUTTON) == LOW)
-  {
-    fllButtonPressed = true;
-    fllButtonTime = millis();
-  }
-}
-
-bool fllPressed()
-{
-  if(fllButtonPressed && millis() - fllButtonTime >= debounceTime)
-  {
-    fllButtonPressed = false;
-    return true;
-  }
-  return false;
-}
-
-#define SLOW_LOOK_LEFT_BUTTON  3   // sll
-bool sllButtonPressed = false;
-unsigned long sllButtonTime = 0;
-
-void sllCallback()
-{
-  if(digitalRead(SLOW_LOOK_LEFT_BUTTON) == LOW)
-  {
-    sllButtonPressed = true;
-    sllButtonTime = millis();
-  }
-}
-
-bool sllPressed()
-{
-  if(sllButtonPressed && millis() - sllButtonTime >= debounceTime)
-  {
-    sllButtonPressed = false;
-    return true;
-  }
-  return false;
-}
-
-#define FAST_LOOK_RIGHT_BUTTON 18  // flr
-bool flrButtonPressed = false;
-unsigned long flrButtonTime = 0;
-
-void flrCallback()
-{
-  if(digitalRead(FAST_LOOK_RIGHT_BUTTON) == LOW)
-  {
-    flrButtonPressed = true;
-    flrButtonTime = millis();
-  }
-}
-
-bool flrPressed()
-{
-  if(flrButtonPressed && millis() - flrButtonTime >= debounceTime)
-  {
-    flrButtonPressed = false;
-    return true;
-  }
-  return false;
-}
-
-#define SLOW_LOOK_RIGHT_BUTTON 19  // slr
-bool slrButtonPressed = false;
-unsigned long slrButtonTime = 0;
-
-void slrCallback()
-{
-  if(digitalRead(SLOW_LOOK_RIGHT_BUTTON) == LOW)
-  {
-    slrButtonPressed = true;
-    slrButtonTime = millis();
-  }
-}
-
-bool slrPressed()
-{
-  if(slrButtonPressed && millis() - slrButtonTime >= debounceTime)
-  {
-    slrButtonPressed = false;
-    return true;
-  }
-  return false;
-}
-
-#define FAST_ROLL_EYES_BUTTON  20  // fre
-bool freButtonPressed = false;
-unsigned long freButtonTime = 0;
-
-void freCallback()
-{
-  if(digitalRead(FAST_ROLL_EYES_BUTTON) == LOW)
-  {
-    freButtonPressed = true;
-    freButtonTime = millis();
-  }
-}
-
-bool frePressed()
-{
-  if(freButtonPressed && millis() - freButtonTime >= debounceTime)
-  {
-    freButtonPressed = false;
-    return true;
-  }
-  return false;
-}
-
-#define SLOW_ROLL_EYES_BUTTON  21  // sre
-bool sreButtonPressed = false;
-unsigned long sreButtonTime = 0;
-
-void sreCallback()
-{
-  if(digitalRead(SLOW_ROLL_EYES_BUTTON) == LOW)
-  {
-    sreButtonPressed = true;
-    sreButtonTime = millis();
-  }
-}
-
-bool srePressed()
-{
-  if(sreButtonPressed && millis() - sreButtonTime >= debounceTime)
-  {
-    sreButtonPressed = false;
-    return true;
-  }
-  return false;
-}
+uint8_t *ptr;
 
 void ledOn()
 {
@@ -249,28 +115,34 @@ void setup() {
     blinkSlideReadings[i] = 0;
   }
 
+  ptr = matrix.backBuffer(); // Get address of matrix data
+
+  // write neutral eye from images header
+  memcpy_P(ptr, neutralEye, sizeof(neutralEye));
+
+
   Serial.begin(9600);
   matrix.begin();
   
-  matrix.fillCircle(16, 16, 14, matrix.Color333(0, 0, 1));
-  matrix.fillCircle(19, 18, 6, matrix.Color333(0, 0, 0));
+//  matrix.fillCircle(16, 16, 14, matrix.Color333(0, 0, 1));
+//  matrix.fillCircle(19, 18, 6, matrix.Color333(0, 0, 0));
+//  Serial.println("First eye:");
+//  matrix.dumpMatrix();
 }
 
 void loop() {
-  matrix.fillCircle(16, 16, 14, matrix.Color333(0, 0, 1));
-  matrix.fillCircle(19, 18, 6, matrix.Color333(0, 0, 0));
-
   if (fllPressed())
   {
     // fast look left
-    matrix.fillCircle(16, 16, 15, matrix.Color333(0, 0, 1));
-    matrix.fillCircle(8, 16, 6, matrix.Color333(0, 0, 0));
-    delayTime = 100;
+    memcpy_P(ptr, lookLeft, sizeof(lookLeft));
+//    Serial.println("FLL:");
+//    matrix.dumpMatrix();
+    delayTime = 1000;
   } else if (sllPressed()) {
     // slow look left
     matrix.fillCircle(16, 16, 15, matrix.Color333(0, 0, 1));
     matrix.fillCircle(8, 16, 6, matrix.Color333(0, 0, 0));
-    delayTime = 1000;
+    delayTime = 4000;
   } else if (flrPressed()) {
     // fast look right
     matrix.fillCircle(16, 16, 15, matrix.Color333(0, 0, 1));
@@ -291,15 +163,18 @@ void loop() {
     matrix.fillCircle(16, 16, 15, matrix.Color333(0, 0, 1));
     matrix.fillCircle(8, 16, 6, matrix.Color333(0, 0, 0));
     delayTime = 1000;
+  } else {
+    memcpy_P(ptr, neutralEye, sizeof(neutralEye));
+    delayTime = 100;
   }
   delay(delayTime);
   
-  blinkSlide = analogRead(BLINK_SLIDER);
-  blinkSlideTotal = blinkSlideTotal - blinkSlideReadings[readIdx];
-  blinkSlideTotal = blinkSlideTotal + blinkSlide;
-  blinkSlideReadings[readIdx] = blinkSlide;
-  blinkSlideAvg = blinkSlideTotal / window;
-  Serial.println(blinkSlideAvg);
+//  blinkSlide = analogRead(BLINK_SLIDER);
+//  blinkSlideTotal = blinkSlideTotal - blinkSlideReadings[readIdx];
+//  blinkSlideTotal = blinkSlideTotal + blinkSlide;
+//  blinkSlideReadings[readIdx] = blinkSlide;
+//  blinkSlideAvg = blinkSlideTotal / window;
+//  Serial.println(blinkSlideAvg);
   
 //  mainWheel = analogRead(MAIN_WHEEL);
 //  mainWheelTotal = mainWheelTotal - mainWheelReadings[readIdx];
