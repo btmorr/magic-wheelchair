@@ -88,6 +88,8 @@ int blinkSlideMax = 14000;
 int delayTime = 100;
 
 uint8_t *ptr;
+const long BOARD_SIZE = 3072;
+uint8_t PROGMEM img[BOARD_SIZE];
 
 void ledOn()
 {
@@ -124,16 +126,14 @@ void setup() {
   Serial.begin(9600);
   matrix.begin();
   
-//  matrix.fillCircle(16, 16, 14, matrix.Color333(0, 0, 1));
-//  matrix.fillCircle(19, 18, 6, matrix.Color333(0, 0, 0));
-//  Serial.println("First eye:");
-//  matrix.dumpMatrix();
 }
 
 void loop() {
   if (fllPressed())
   {
     // fast look left
+    memcpy(img, neutralEye, sizeof(neutralEye));
+    
     memcpy_P(ptr, lookLeft, sizeof(lookLeft));
 //    Serial.println("FLL:");
 //    matrix.dumpMatrix();
