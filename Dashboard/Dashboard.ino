@@ -55,7 +55,7 @@ RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE, false);
  * The main wheel should ___
  * The secondary wheel should ____
  */
-//#define MAIN_WHEEL   A0
+#define MAIN_WHEEL   A8
 //#define SEC_WHEEL    A1
 /*
  * Blink slider behavior:
@@ -67,25 +67,27 @@ RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE, false);
  * closed, the "roll eyes" function should only roll up to the top of the open
  * portion of the eye, not up behind the eyelid.
  */
-#define BLINK_SLIDER A2
+#define BLINK_SLIDER A7`
 
 // other pins
 #define BOARD_LED_PIN 13
 
-const int window = 4;
+const int window = 20;
 int readIdx = 0;
 
 int mainWheel = 0;
 int mainWheelReadings[window];
 int mainWheelTotal = 0;
 int mainWheelAvg = 0;
+const int mainWheelMax = 1023;
+int x_position = 0;
 
 int blinkSlide = 0;
 int blinkSlideReadings[window];
 int blinkSlideTotal = 0;
 int blinkSlideAvg = 0;
-int blinkSlideMax = 14000;
-int delayTime = 100;
+int blinkSlideMax = 1023;
+int delayTime = 40;
 
 uint8_t *ptr;
 
@@ -99,9 +101,39 @@ void ledOff()
   digitalWrite(BOARD_LED_PIN, LOW);
 }
 
+/* draw a star with the top point at x,y */
+void drawStar(int x, int y)
+{
+  int Ax = x-4;
+  int Ay = y+12;
+  int Bx = x;
+  int By = y;
+  int Cx = x+4;
+  int Cy = y+12;
+  int Dx = x-6;
+  int Dy = y+6;
+  int Ex = x+6;
+  int Ey = y+6;
+  //star lines
+  matrix.drawLine(Ax,Ay,Bx,By, matrix.Color333(0,0,0));
+  matrix.drawLine(Bx,By,Cx,Cy, matrix.Color333(0,0,0));
+  matrix.drawLine(Cx,Cy,Dx,Dy, matrix.Color333(0,0,0));
+  matrix.drawLine(Dx,Dy,Ex,Ey, matrix.Color333(0,0,0));
+  matrix.drawLine(Ex,Ey,Ax,Ay, matrix.Color333(0,0,0));
+  //fill in
+  matrix.drawLine(Bx,By,Bx,By+10, matrix.Color333(0,0,0));
+  matrix.drawLine(Bx-1,By+2,Bx-1,By+10, matrix.Color333(0,0,0));
+  matrix.drawLine(Bx+1,By+2,Bx+1,By+10, matrix.Color333(0,0,0));
+  matrix.drawLine(Bx-2,By+9,Bx-2,By+10, matrix.Color333(0,0,0));
+  matrix.drawLine(Bx+2,By+9,Bx+2,By+10, matrix.Color333(0,0,0));
+  matrix.drawPixel(Bx-3,By+7, matrix.Color333(0,0,0));
+  matrix.drawPixel(Bx+3,By+7, matrix.Color333(0,0,0));
+}
+
 void setup() {
   pinMode(BOARD_LED_PIN, OUTPUT);
   digitalWrite(BOARD_LED_PIN, LOW);
+  pinMode(MAIN_WHEEL, INPUT);
 
   attachInterrupt(digitalPinToInterrupt(FAST_LOOK_LEFT_BUTTON), fllCallback, RISING);
   attachInterrupt(digitalPinToInterrupt(SLOW_LOOK_LEFT_BUTTON), sllCallback, RISING);
@@ -118,56 +150,44 @@ void setup() {
   ptr = matrix.backBuffer(); // Get address of matrix data
 
   // write neutral eye from images header
-  memcpy_P(ptr, neutralEye, sizeof(neutralEye));
-
+  memcpy_P(ptr, circle, sizeof(circle));
+//  drawStar(16,12);
 
   Serial.begin(9600);
   matrix.begin();
+
   
+
+/* asterisks */
+//  matrix.setTextColor(matrix.Color333(0,0,0));
+//  matrix.setTextSize(2);
+  
+  for(int i=11; i<21; i++) {
+    memcpy_P(ptr, circle, sizeof(circle));
+    drawStar(i,12);
+    Serial.print("\n----");
+    Serial.print(i);
+    Serial.print("----");
+    matrix.dumpMatrix();
+  }
+/* end asterisks */
+
 //  matrix.fillCircle(16, 16, 14, matrix.Color333(0, 0, 1));
 //  matrix.fillCircle(19, 18, 6, matrix.Color333(0, 0, 0));
-//  Serial.println("First eye:");
+//  Serial.println("circle:");
 //  matrix.dumpMatrix();
 }
 
 void loop() {
-  if (fllPressed())
-  {
-    // fast look left
-    memcpy_P(ptr, lookLeft, sizeof(lookLeft));
-//    Serial.println("FLL:");
-//    matrix.dumpMatrix();
-    delayTime = 1000;
-  } else if (sllPressed()) {
-    // slow look left
-    matrix.fillCircle(16, 16, 15, matrix.Color333(0, 0, 1));
-    matrix.fillCircle(8, 16, 6, matrix.Color333(0, 0, 0));
-    delayTime = 4000;
-  } else if (flrPressed()) {
-    // fast look right
-    matrix.fillCircle(16, 16, 15, matrix.Color333(0, 0, 1));
-    matrix.fillCircle(8, 16, 6, matrix.Color333(0, 0, 0));
-    delayTime = 100;
-  } else if (slrPressed()) {
-    // slow look right
-    matrix.fillCircle(16, 16, 15, matrix.Color333(0, 0, 1));
-    matrix.fillCircle(8, 16, 6, matrix.Color333(0, 0, 0));
-    delayTime = 1000;
-  } else if (frePressed()) {
-    // fast roll eyes
-    matrix.fillCircle(16, 16, 15, matrix.Color333(0, 0, 1));
-    matrix.fillCircle(8, 16, 6, matrix.Color333(0, 0, 0));
-    delayTime = 100;
-  } else if (srePressed()) {
-    // slow roll eyes
-    matrix.fillCircle(16, 16, 15, matrix.Color333(0, 0, 1));
-    matrix.fillCircle(8, 16, 6, matrix.Color333(0, 0, 0));
-    delayTime = 1000;
-  } else {
-    memcpy_P(ptr, neutralEye, sizeof(neutralEye));
-    delayTime = 100;
-  }
-  delay(delayTime);
+//  matrix.fillCircle(16,16,14, matrix.Color333(0,0,1));
+//  memcpy_P(ptr, circle, sizeof(circle));
+//  x_position = ((mainWheelAvg * 10) / mainWheelMax) + 11;
+//  drawStar(x_position,12);
+////  Serial.print("X: ");
+////  Serial.println(x_position);
+////  matrix.setCursor(x_position,12);
+////  matrix.print('*');
+//  delay(10);
   
 //  blinkSlide = analogRead(BLINK_SLIDER);
 //  blinkSlideTotal = blinkSlideTotal - blinkSlideReadings[readIdx];
@@ -176,11 +196,13 @@ void loop() {
 //  blinkSlideAvg = blinkSlideTotal / window;
 //  Serial.println(blinkSlideAvg);
   
-//  mainWheel = analogRead(MAIN_WHEEL);
-//  mainWheelTotal = mainWheelTotal - mainWheelReadings[readIdx];
-//  mainWheelTotal = mainWheelTotal + mainWheel;
-//  mainWheelReadings[readIdx] = mainWheel;
-//  mainWheelAvg = mainWheelTotal / window;
+  mainWheel = analogRead(MAIN_WHEEL);
+  mainWheelTotal = mainWheelTotal - mainWheelReadings[readIdx];
+  mainWheelTotal = mainWheelTotal + mainWheel;
+  mainWheelReadings[readIdx] = mainWheel;
+  mainWheelAvg = mainWheelTotal / window;
+//  Serial.println(mainWheelAvg);
+//  delay(delayTime);
 
   readIdx = (readIdx + 1) % window;
 }
