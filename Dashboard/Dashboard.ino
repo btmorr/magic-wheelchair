@@ -156,21 +156,41 @@ void setup() {
   Serial.begin(9600);
   matrix.begin();
 
-  
-
-/* asterisks */
-//  matrix.setTextColor(matrix.Color333(0,0,0));
-//  matrix.setTextSize(2);
-  
-  for(int i=11; i<21; i++) {
+  /*
+   * roll:
+   * 21,11
+   * 20,10
+   * 16,5
+   * 12,10
+   * 11,11
+   */
+   const int SEQ_LEN = 6;
+   int sequence[SEQ_LEN][2] = {
+//    { 20, 11 },
+//    { 21, 9 },
+//    { 18, 4 },
+//    { 14, 4 },
+//    { 11, 9 },
+//    { 12, 11 }
+    { 16, 11 },
+    { 16, 8 },
+    { 15, 5 },
+    { 12, 0 },
+    { 8, 6 },
+    { 9, 11 }
+   };
+  int radius = 5;
+  for(int i=0; i<SEQ_LEN; i++) {
     memcpy_P(ptr, circle, sizeof(circle));
-    drawStar(i,12);
-    Serial.print("\n----");
+//    drawStar(sequence[i][0],sequence[i][1]);
+    matrix.fillCircle(sequence[i][0],sequence[i][1]+radius,radius,matrix.Color333(0,0,0));
+//    delay(150);
+    Serial.print("\n---- roll");
     Serial.print(i);
-    Serial.print("----");
+    Serial.print(" ----");
     matrix.dumpMatrix();
   }
-/* end asterisks */
+
 
 //  matrix.fillCircle(16, 16, 14, matrix.Color333(0, 0, 1));
 //  matrix.fillCircle(19, 18, 6, matrix.Color333(0, 0, 0));
