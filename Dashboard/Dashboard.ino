@@ -51,7 +51,7 @@ RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE, false);
 // varistor pin map
 /*
  * Wheel behavior:
- * 
+ *
  * The main wheel should ___
  * The secondary wheel should ____
  */
@@ -59,7 +59,7 @@ RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE, false);
 //#define SEC_WHEEL    A1
 /*
  * Blink slider behavior:
- * 
+ *
  * The blink slider should determine how open or closed the eyes appear to be. Also,
  * this should affect the frequency and speed of blinking. If the eyes are more open
  * blinking should be faster and less frequent. If they are mostly closed, blinking
@@ -88,8 +88,8 @@ int blinkSlideMax = 14000;
 int delayTime = 100;
 
 uint8_t *ptr;
-const long BOARD_SIZE = 3072;
-uint8_t PROGMEM img[BOARD_SIZE];
+const long BOARD_SIZE = 3072 / 2;
+uint8_t img[BOARD_SIZE];
 
 void ledOn()
 {
@@ -111,7 +111,7 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(SLOW_LOOK_RIGHT_BUTTON), slrCallback, RISING);
   attachInterrupt(digitalPinToInterrupt(FAST_ROLL_EYES_BUTTON), freCallback, RISING);
   attachInterrupt(digitalPinToInterrupt(SLOW_ROLL_EYES_BUTTON), sreCallback, RISING);
-  
+
   for (int i=0; i<window; i++) {
     mainWheelReadings[i] = 0;
     blinkSlideReadings[i] = 0;
@@ -125,57 +125,60 @@ void setup() {
 
   Serial.begin(9600);
   matrix.begin();
-  
+
 }
 
 void loop() {
   if (fllPressed())
   {
     // fast look left
-    memcpy(img, neutralEye, sizeof(neutralEye));
-    
-    memcpy_P(ptr, lookLeft, sizeof(lookLeft));
+    memcpy_P(img, lookLeft, sizeof(BOARD_SIZE));
+//    for(int i=0; i<BOARD_SIZE; i++)
+//    {
+//      img[i] = img[i] & ~nonMask[i];
+//    }
+    memcpy_P(ptr, img, sizeof(BOARD_SIZE));
 //    Serial.println("FLL:");
 //    matrix.dumpMatrix();
-    delayTime = 1000;
+    delayTime = 100;
   } else if (sllPressed()) {
     // slow look left
     matrix.fillCircle(16, 16, 15, matrix.Color333(0, 0, 1));
     matrix.fillCircle(8, 16, 6, matrix.Color333(0, 0, 0));
-    delayTime = 4000;
+    delayTime = 400;
   } else if (flrPressed()) {
     // fast look right
     matrix.fillCircle(16, 16, 15, matrix.Color333(0, 0, 1));
     matrix.fillCircle(8, 16, 6, matrix.Color333(0, 0, 0));
-    delayTime = 100;
+    delayTime = 10;
   } else if (slrPressed()) {
     // slow look right
     matrix.fillCircle(16, 16, 15, matrix.Color333(0, 0, 1));
     matrix.fillCircle(8, 16, 6, matrix.Color333(0, 0, 0));
-    delayTime = 1000;
+    delayTime = 100;
   } else if (frePressed()) {
     // fast roll eyes
     matrix.fillCircle(16, 16, 15, matrix.Color333(0, 0, 1));
     matrix.fillCircle(8, 16, 6, matrix.Color333(0, 0, 0));
-    delayTime = 100;
+    delayTime = 10;
   } else if (srePressed()) {
     // slow roll eyes
     matrix.fillCircle(16, 16, 15, matrix.Color333(0, 0, 1));
     matrix.fillCircle(8, 16, 6, matrix.Color333(0, 0, 0));
-    delayTime = 1000;
+    delayTime = 100;
   } else {
     memcpy_P(ptr, neutralEye, sizeof(neutralEye));
-    delayTime = 100;
+    delayTime = 10;
   }
   delay(delayTime);
-  
+
 //  blinkSlide = analogRead(BLINK_SLIDER);
 //  blinkSlideTotal = blinkSlideTotal - blinkSlideReadings[readIdx];
 //  blinkSlideTotal = blinkSlideTotal + blinkSlide;
 //  blinkSlideReadings[readIdx] = blinkSlide;
 //  blinkSlideAvg = blinkSlideTotal / window;
 //  Serial.println(blinkSlideAvg);
-  
+
 //  mainWheel = analogRead(MAIN_WHEEL);
 //  mainWheelTotal = mainWheelTotal - mainWheelReadings[readIdx];
 //  mainWheelTotal = mainWheelTotal + mainWheel;
