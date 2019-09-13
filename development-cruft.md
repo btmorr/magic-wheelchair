@@ -158,6 +158,11 @@ void drawHeart(int x, int y)
   matrix.drawLine(x+1, y+radius, x+1, y+3*radius-2, matrix.Color333(0,0,0));
 }
 
+void blinkEye(int seq) {
+  matrix.fillCircle(16, 20, 5, matrix.Color333(0,0,0));
+  matrix.fillCircle(16, -12+2*seq, 16, matrix.Color333(0,0,0));
+}
+
 void setup() {
   pinMode(BOARD_LED_PIN, OUTPUT);
   digitalWrite(BOARD_LED_PIN, LOW);
@@ -255,6 +260,16 @@ void loop() {
 //  matrix.setCursor(x_position,12);
 //  matrix.print('*');
   delay(10);
+
+  for (int i=0; i<12; i++) {
+    memcpy_P(ptr, circle, IMG_SIZE);
+    blinkEye(i);
+    delay(40);
+    Serial.print("\n---- blink");
+    Serial.print(i);
+    Serial.println(" ----");
+    matrix.dumpMatrix();
+  }
 
 //  blinkSlide = analogRead(BLINK_SLIDER);
 //  blinkSlideTotal = blinkSlideTotal - blinkSlideReadings[readIdx];

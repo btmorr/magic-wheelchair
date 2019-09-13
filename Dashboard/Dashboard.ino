@@ -11,6 +11,7 @@
 #include "hearteyes.h"
 #include "roundeyes.h"
 #include "stareyes.h"
+#include "blink.h"
 
 /*
   - LED attached from pin 13 to ground (on board)
@@ -62,6 +63,8 @@ const uint8_t* animations[3][10] = {
   { heartEye0, heartEye1, heartEye2, heartEye3, heartEye4, heartEye5, heartEye6, heartEye7, heartEye8, heartEye9 }
 };
 
+const uint8_t* blinkCells[12] = {
+  blink0, blink1, blink2, blink3, blink4, blink5, blink6, blink7, blink8, blink9, blink10, blink11 };
 
 const int window = 20;
 int readIdx = 0;
@@ -96,31 +99,44 @@ void setup() {
   memcpy_P(ptr, circle, IMG_SIZE);
 
   Serial.begin(9600);
+  Serial.println("hi");
   matrix.begin();
 }
 
 void loop() {
-  if (fllPressed()) {
-    eyeShape = CIRCLE;
-  } else if (sllPressed()) {
-    eyeShape = STAR;
-  } else if (flrPressed()) {
-    eyeShape = HEART;
-  }
+ if (fllPressed()) {
+   Serial.println("circle");
+   eyeShape = CIRCLE;
+ } else if (sllPressed()) {
+   Serial.println("star");
+   eyeShape = STAR;
+ } else if (flrPressed()) {
+   Serial.println("heart");
+   eyeShape = HEART;
+ } else if (slrPressed()) {
+   Serial.println("blink");
+   for (int i=0; i<12; i++) {
+     memcpy_P(ptr, blinkCells[i], IMG_SIZE);
+     delay(10);
+   }
+   for (int i=0; i<12; i++) {
+     memcpy_P(ptr, blinkCells[11-i], IMG_SIZE);
+     delay(10);
+   }
+ }
 
+ mainWheel = analogRead(MAIN_WHEEL);
+ mainWheelTotal = mainWheelTotal - mainWheelReadings[readIdx];
+ mainWheelTotal = mainWheelTotal + mainWheel;
+ mainWheelReadings[readIdx] = mainWheel;
+ mainWheelAvg = mainWheelTotal / window;
 
-  mainWheel = analogRead(MAIN_WHEEL);
-  mainWheelTotal = mainWheelTotal - mainWheelReadings[readIdx];
-  mainWheelTotal = mainWheelTotal + mainWheel;
-  mainWheelReadings[readIdx] = mainWheel;
-  mainWheelAvg = mainWheelTotal / window;
+ // for each pupil shape, there are 10 cells for lateral movement,
+ // so the full range of wheel input is normalized to [0-9]
+ x_position = ((mainWheelAvg * 9) / mainWheelMax);
 
-  // for each pupil shape, there are 10 cells for lateral movement,
-  // so the full range of wheel input is normalized to [0-9]
-  x_position = ((mainWheelAvg * 9) / mainWheelMax);
-  
-  memcpy_P(ptr, animations[eyeShape][x_position], IMG_SIZE);
-  delay(delayTime);
+ memcpy_P(ptr, animations[eyeShape][x_position], IMG_SIZE);
+ delay(delayTime);
 
-  readIdx = (readIdx + 1) % window;
+ readIdx = (readIdx + 1) % window;
 }
