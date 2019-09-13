@@ -18,18 +18,23 @@ input pins, and also using only one of the color channels reduces the max amount
 of current draw used by the panels and makes us less likely to suffer from a
 power shortage.
 
+The data signal is wired into both of the eyes (simple 3 way join) so that the
+animation is shown on both eyes in coordination. This means we can't do one-eye
+animations, such as winking, but makes the whole thing much simpler to program
+and debug.
+
 A circular potentiometer is attached to the steering wheel to measure its
 position.
 
 Aside from the pins specified in the Adafruit instructions, these pins are used
 for the buttons:
 
-circle eyes button          2
-star eyes button            3
-heart eyes button          18
-roll eyes button           19
-blink eyes button          20
-steering wheel             A8
+- circle eyes button          2
+- star eyes button            3
+- heart eyes button          18
+- roll eyes button           19
+- blink eyes button          20
+- steering wheel             A8
 
 ## Actions
 
