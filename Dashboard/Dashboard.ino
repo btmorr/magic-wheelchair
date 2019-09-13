@@ -11,7 +11,7 @@
 #include "hearteyes.h"
 #include "roundeyes.h"
 #include "stareyes.h"
-#include "blink.h"
+#include "blinkeyes.h"
 
 /*
   - LED attached from pin 13 to ground (on board)
@@ -63,8 +63,14 @@ const uint8_t* animations[3][10] = {
   { heartEye0, heartEye1, heartEye2, heartEye3, heartEye4, heartEye5, heartEye6, heartEye7, heartEye8, heartEye9 }
 };
 
-const uint8_t* blinkCells[12] = {
-  blink0, blink1, blink2, blink3, blink4, blink5, blink6, blink7, blink8, blink9, blink10, blink11 };
+const uint8_t* blinkCells[23] = {
+  blink0, blink1, blink2, blink3, blink4, blink5,
+  blink6, blink7, blink8, blink9, blink10, blink11,
+  blink10, blink9, blink8, blink7, blink6, blink5,
+  blink4, blink3, blink2, blink1, blink0
+};
+bool blinkRunning = false;
+int blinkCell = 0;
 
 const int window = 20;
 int readIdx = 0;
@@ -99,44 +105,53 @@ void setup() {
   memcpy_P(ptr, circle, IMG_SIZE);
 
   Serial.begin(9600);
-  Serial.println("hi");
+//  Serial.println("hi");
   matrix.begin();
+//  for (int i=0; i<23; i++) {
+//    Serial.println(i);
+//    memcpy_P(ptr, blinkCells[i], IMG_SIZE);
+//    delay(10);
+//  }
 }
 
 void loop() {
- if (fllPressed()) {
+  if (fllPressed()) {
    Serial.println("circle");
    eyeShape = CIRCLE;
- } else if (sllPressed()) {
+  } else if (sllPressed()) {
    Serial.println("star");
    eyeShape = STAR;
- } else if (flrPressed()) {
+  } else if (flrPressed()) {
    Serial.println("heart");
    eyeShape = HEART;
- } else if (slrPressed()) {
+  } else if (slrPressed()) {
    Serial.println("blink");
-   for (int i=0; i<12; i++) {
-     memcpy_P(ptr, blinkCells[i], IMG_SIZE);
-     delay(10);
-   }
-   for (int i=0; i<12; i++) {
-     memcpy_P(ptr, blinkCells[11-i], IMG_SIZE);
-     delay(10);
-   }
- }
-
- mainWheel = analogRead(MAIN_WHEEL);
- mainWheelTotal = mainWheelTotal - mainWheelReadings[readIdx];
- mainWheelTotal = mainWheelTotal + mainWheel;
- mainWheelReadings[readIdx] = mainWheel;
- mainWheelAvg = mainWheelTotal / window;
-
- // for each pupil shape, there are 10 cells for lateral movement,
- // so the full range of wheel input is normalized to [0-9]
- x_position = ((mainWheelAvg * 9) / mainWheelMax);
-
- memcpy_P(ptr, animations[eyeShape][x_position], IMG_SIZE);
- delay(delayTime);
-
- readIdx = (readIdx + 1) % window;
+   blinkRunning = true;
+  }
+  
+  mainWheel = analogRead(MAIN_WHEEL);
+  mainWheelTotal = mainWheelTotal - mainWheelReadings[readIdx];
+  mainWheelTotal = mainWheelTotal + mainWheel;
+  mainWheelReadings[readIdx] = mainWheel;
+  mainWheelAvg = mainWheelTotal / window;
+  
+  // for each pupil shape, there are 10 cells for lateral movement,
+  // so the full range of wheel input is normalized to [0-9]
+  x_position = ((mainWheelAvg * 9) / mainWheelMax);
+  
+  if (blinkRunning) {
+    Serial.println(blinkCell);
+    memcpy_P(ptr, blinkCells[10], IMG_SIZE);
+    blinkCell++;
+    if(blinkCell>22) {
+      blinkCell = 0;
+      blinkRunning = false;
+    }
+    delay(20);
+  } else {
+    memcpy_P(ptr, animations[eyeShape][x_position], IMG_SIZE);
+    delay(delayTime);
+  }
+  
+  readIdx = (readIdx + 1) % window;
 }
