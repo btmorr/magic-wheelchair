@@ -1,6 +1,6 @@
 # magic-wheelchair
 
-Controls for the Pusheen build for Magic Wheelchair 2019
+Controls for the Pusheen build for [Magic Wheelchair 2019](https://www.magicwheelchair.org/)
 
 ## Circuit
 
