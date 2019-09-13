@@ -8,6 +8,9 @@
 
 #include "images.h"
 #include "buttons.h"
+#include "hearteyes.h"
+#include "roundeyes.h"
+#include "stareyes.h"
 
 /*
   - LED attached from pin 13 to ground (on board)
@@ -46,11 +49,18 @@ RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE, false);
 
 #define MAIN_WHEEL   A8
 
+#define IMG_SIZE   1536
+
 #define CIRCLE  0
 #define STAR    1
 #define HEART   2
 int eyeShape = CIRCLE;
 
+const uint8_t* animations[3][10] = {
+  { roundEye0, roundEye1, roundEye2, roundEye3, roundEye4, roundEye5, roundEye6, roundEye7, roundEye8, roundEye9 },
+  { star0, star1, star2, star3, star4, star5, star6, star7, star8, star9 },
+  { heartEye0, heartEye1, heartEye2, heartEye3, heartEye4, heartEye5, heartEye6, heartEye7, heartEye8, heartEye9 }
+};
 
 
 const int window = 20;
@@ -83,15 +93,14 @@ void setup() {
   ptr = matrix.backBuffer(); // Get address of matrix data
 
   // write eye background from images header
-  memcpy_P(ptr, circle, sizeof(circle));
+  memcpy_P(ptr, circle, IMG_SIZE);
 
   Serial.begin(9600);
   matrix.begin();
 }
 
 void loop() {
-  if (fllPressed())
-  {
+  if (fllPressed()) {
     eyeShape = CIRCLE;
   } else if (sllPressed()) {
     eyeShape = STAR;
@@ -106,7 +115,11 @@ void loop() {
   mainWheelReadings[readIdx] = mainWheel;
   mainWheelAvg = mainWheelTotal / window;
 
-  x_position = ((mainWheelAvg * 10) / mainWheelMax) + 11;
+  // for each pupil shape, there are 10 cells for lateral movement,
+  // so the full range of wheel input is normalized to [0-9]
+  x_position = ((mainWheelAvg * 9) / mainWheelMax);
+  
+  memcpy_P(ptr, animations[eyeShape][x_position], IMG_SIZE);
   delay(delayTime);
 
   readIdx = (readIdx + 1) % window;

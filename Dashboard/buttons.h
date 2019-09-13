@@ -1,3 +1,5 @@
+// TODO: rename constants and functions to reflect new button behaviors
+
 int debounceTime = 100;
 
 #define FAST_LOOK_LEFT_BUTTON  2   // fll
