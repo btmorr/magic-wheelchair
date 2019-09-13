@@ -1,3 +1,19 @@
+I tried to use bitmasks to create the shapes of the pupils, which would have
+made it a lot easier to do animations by simply applying a bit shift to the
+mask, so it would be wherever I want without having to dump the matrix for each
+cell in all the animations. I wasn't able to figure out how 5/6/5 encoding
+works with the LED panels, however, so I had to fall back to doing cell
+animation. Most of the code used to create the cells will not be used in the
+actual firmware for the project, but I don't want it to disappear forever, so
+for now I'm creating this file as a dump of the cruft from creating the cells,
+which will be useful if I ever try to add/change anything, if anyone else tries
+to understand what I did, or if I want to make a tutorial out of it or
+something.
+
+With no further delay, here's a disorganized mess of code from intermediate
+cell animation development:
+
+```cpp
 #include <RGBmatrixPanel.h>
 #include <gamma.h>
 
@@ -257,3 +273,7 @@ void loop() {
 
   readIdx = (readIdx + 1) % window;
 }
+```
+
+I took the serial dumps of each sequence, and saved them in header files to use
+with memcpy_P, mostly as a performance tweak.
