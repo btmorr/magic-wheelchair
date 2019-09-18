@@ -12,15 +12,13 @@
 #include "roundeyes.h"
 #include "stareyes.h"
 #include "blinkeyes.h"
+#include "roundroll.h"
 
 /*
-  - LED attached from pin 13 to ground (on board)
-  - button attached to pin 2 from +5V
-  - 10K resistor attached to pin 2 from ground
-
-
-  - each eye board requires 3 ground connections
-*/
+ * For each button:
+ * - button attached to pin 2 from +5V
+ * - 10K resistor attached to pin 2 from ground
+ */
 
 /* pin map
 
@@ -35,6 +33,11 @@
 [EYES] row select C              A2
 [EYES] row select D              A3
 
+round eyes button                 2
+star eyes button                  3
+heart eyes button                18
+blink button                     19
+roll eyes button                 20
 wheel                            A8
 */
 
@@ -63,14 +66,14 @@ const uint8_t* animations[3][10] = {
   { heartEye0, heartEye1, heartEye2, heartEye3, heartEye4, heartEye5, heartEye6, heartEye7, heartEye8, heartEye9 }
 };
 
-const uint8_t* blinkCells[23] = {
+const uint8_t* blinkCells[12] = {
   blink0, blink1, blink2, blink3, blink4, blink5,
-  blink6, blink7, blink8, blink9, blink10, blink11,
-  blink10, blink9, blink8, blink7, blink6, blink5,
-  blink4, blink3, blink2, blink1, blink0
+  blink6, blink7, blink8, blink9, blink10, blink11
 };
-bool blinkRunning = false;
-int blinkCell = 0;
+
+const uint8_t* rollEyes[7] = {
+  roll0, roll1, roll2, roll3, roll4, roll5, roll6
+};
 
 const int window = 20;
 int readIdx = 0;
@@ -87,13 +90,19 @@ uint8_t *ptr;
 
 void setup() {
   pinMode(MAIN_WHEEL, INPUT);
+  pinMode(FAST_LOOK_LEFT_BUTTON, INPUT);
+  pinMode(SLOW_LOOK_LEFT_BUTTON, INPUT);
+  pinMode(FAST_LOOK_RIGHT_BUTTON, INPUT);
+  pinMode(SLOW_LOOK_RIGHT_BUTTON, INPUT);
+  pinMode(FAST_ROLL_EYES_BUTTON, INPUT);
+  pinMode(SLOW_ROLL_EYES_BUTTON, INPUT);
 
   attachInterrupt(digitalPinToInterrupt(FAST_LOOK_LEFT_BUTTON), fllCallback, RISING);
   attachInterrupt(digitalPinToInterrupt(SLOW_LOOK_LEFT_BUTTON), sllCallback, RISING);
   attachInterrupt(digitalPinToInterrupt(FAST_LOOK_RIGHT_BUTTON), flrCallback, RISING);
   attachInterrupt(digitalPinToInterrupt(SLOW_LOOK_RIGHT_BUTTON), slrCallback, RISING);
-  attachInterrupt(digitalPinToInterrupt(FAST_ROLL_EYES_BUTTON), freCallback, RISING);
-  attachInterrupt(digitalPinToInterrupt(SLOW_ROLL_EYES_BUTTON), sreCallback, RISING);
+//  attachInterrupt(digitalPinToInterrupt(FAST_ROLL_EYES_BUTTON), freCallback, RISING);
+//  attachInterrupt(digitalPinToInterrupt(SLOW_ROLL_EYES_BUTTON), sreCallback, RISING);
 
   for (int i=0; i<window; i++) {
     mainWheelReadings[i] = 0;
@@ -105,28 +114,54 @@ void setup() {
   memcpy_P(ptr, circle, IMG_SIZE);
 
   Serial.begin(9600);
-//  Serial.println("hi");
+  Serial.println("start");
   matrix.begin();
-//  for (int i=0; i<23; i++) {
-//    Serial.println(i);
-//    memcpy_P(ptr, blinkCells[i], IMG_SIZE);
-//    delay(10);
-//  }
 }
 
 void loop() {
   if (fllPressed()) {
-   Serial.println("circle");
-   eyeShape = CIRCLE;
-  } else if (sllPressed()) {
-   Serial.println("star");
-   eyeShape = STAR;
+    Serial.println("circle");
+    eyeShape = CIRCLE;
+//  } else if (sllPressed()) {
+//    Serial.println("star");
+//    eyeShape = STAR;
   } else if (flrPressed()) {
-   Serial.println("heart");
-   eyeShape = HEART;
+    Serial.println("heart");
+    eyeShape = HEART;
+  } else if (sllPressed()) {
+    Serial.println("roll");
+    memcpy_P(ptr, rollEyes[0], IMG_SIZE);
+    delay(150);
+    memcpy_P(ptr, rollEyes[1], IMG_SIZE);
+    delay(60);
+    memcpy_P(ptr, rollEyes[2], IMG_SIZE);
+    delay(90);
+    memcpy_P(ptr, rollEyes[4], IMG_SIZE);
+    delay(220);
+    memcpy_P(ptr, rollEyes[2], IMG_SIZE);
+    delay(70);
+    memcpy_P(ptr, rollEyes[1], IMG_SIZE);
+    delay(40);
   } else if (slrPressed()) {
-   Serial.println("blink");
-   blinkRunning = true;
+    Serial.println("blink");
+    memcpy_P(ptr, blinkCells[1], IMG_SIZE);
+    delay(15);
+    memcpy_P(ptr, blinkCells[4], IMG_SIZE);
+    delay(15);
+    memcpy_P(ptr, blinkCells[8], IMG_SIZE);
+    delay(15);
+    memcpy_P(ptr, blinkCells[10], IMG_SIZE);
+    delay(15);
+    memcpy_P(ptr, blinkCells[11], IMG_SIZE);
+    delay(15);
+    memcpy_P(ptr, blinkCells[10], IMG_SIZE);
+    delay(15);
+    memcpy_P(ptr, blinkCells[8], IMG_SIZE);
+    delay(15);
+    memcpy_P(ptr, blinkCells[4], IMG_SIZE);
+    delay(15);
+    memcpy_P(ptr, blinkCells[1], IMG_SIZE);
+    delay(15);
   }
   
   mainWheel = analogRead(MAIN_WHEEL);
@@ -139,19 +174,8 @@ void loop() {
   // so the full range of wheel input is normalized to [0-9]
   x_position = ((mainWheelAvg * 9) / mainWheelMax);
   
-  if (blinkRunning) {
-    Serial.println(blinkCell);
-    memcpy_P(ptr, blinkCells[10], IMG_SIZE);
-    blinkCell++;
-    if(blinkCell>22) {
-      blinkCell = 0;
-      blinkRunning = false;
-    }
-    delay(20);
-  } else {
-    memcpy_P(ptr, animations[eyeShape][x_position], IMG_SIZE);
-    delay(delayTime);
-  }
+  memcpy_P(ptr, animations[eyeShape][x_position], IMG_SIZE);
+  delay(delayTime);
   
   readIdx = (readIdx + 1) % window;
 }

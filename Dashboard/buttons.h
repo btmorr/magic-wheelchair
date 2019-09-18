@@ -2,9 +2,9 @@
 
 int debounceTime = 100;
 
-#define FAST_LOOK_LEFT_BUTTON  2   // fll
-bool fllButtonPressed = false;
-unsigned long fllButtonTime = 0;
+#define FAST_LOOK_LEFT_BUTTON  2   // circle eyes
+volatile bool fllButtonPressed = false;
+volatile unsigned long fllButtonTime = 0;
 
 void fllCallback()
 {
@@ -25,9 +25,9 @@ bool fllPressed()
   return false;
 }
 
-#define SLOW_LOOK_LEFT_BUTTON  3   // sll
-bool sllButtonPressed = false;
-unsigned long sllButtonTime = 0;
+#define SLOW_LOOK_LEFT_BUTTON  3   // star eyes
+volatile bool sllButtonPressed = false;
+volatile unsigned long sllButtonTime = 0;
 
 void sllCallback()
 {
@@ -48,9 +48,9 @@ bool sllPressed()
   return false;
 }
 
-#define FAST_LOOK_RIGHT_BUTTON 18  // flr
-bool flrButtonPressed = false;
-unsigned long flrButtonTime = 0;
+#define FAST_LOOK_RIGHT_BUTTON 18  // heart eyes
+volatile bool flrButtonPressed = false;
+volatile unsigned long flrButtonTime = 0;
 
 void flrCallback()
 {
@@ -71,9 +71,9 @@ bool flrPressed()
   return false;
 }
 
-#define SLOW_LOOK_RIGHT_BUTTON 19  // slr
-bool slrButtonPressed = false;
-unsigned long slrButtonTime = 0;
+#define SLOW_LOOK_RIGHT_BUTTON 19  // blink
+volatile bool slrButtonPressed = false;
+volatile unsigned long slrButtonTime = 0;
 
 void slrCallback()
 {
@@ -94,9 +94,9 @@ bool slrPressed()
   return false;
 }
 
-#define FAST_ROLL_EYES_BUTTON  20  // fre
-bool freButtonPressed = false;
-unsigned long freButtonTime = 0;
+#define FAST_ROLL_EYES_BUTTON  21  // roll eyes
+volatile bool freButtonPressed = false;
+volatile unsigned long freButtonTime = 0;
 
 void freCallback()
 {
@@ -117,9 +117,9 @@ bool frePressed()
   return false;
 }
 
-#define SLOW_ROLL_EYES_BUTTON  21  // sre
-bool sreButtonPressed = false;
-unsigned long sreButtonTime = 0;
+#define SLOW_ROLL_EYES_BUTTON  20  // sre
+volatile bool sreButtonPressed = false;
+volatile unsigned long sreButtonTime = 0;
 
 void sreCallback()
 {
