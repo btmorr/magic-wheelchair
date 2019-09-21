@@ -29,11 +29,13 @@ position.
 Aside from the pins specified in the Adafruit instructions, these pins are used
 for the buttons:
 
-- circle eyes button          2
-- star eyes button            3
-- heart eyes button          18
-- blink eyes button          19
-- steering wheel             A8
+| Button               |  Pin  |
+| -------------------- | ----: |
+| circle eyes button   |     2 |
+| star eyes button     |     3 |
+| heart eyes button    |    18 |
+| blink eyes button    |    19 |
+| steering wheel       |    A8 |
 
 ## Actions
 
