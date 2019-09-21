@@ -32,8 +32,7 @@ for the buttons:
 - circle eyes button          2
 - star eyes button            3
 - heart eyes button          18
-- roll eyes button           19
-- blink eyes button          20
+- blink eyes button          19
 - steering wheel             A8
 
 ## Actions
@@ -44,6 +43,5 @@ Requirements for input and behaviors:
 - A button should turn the pupils into circles, which should be steerable
 - A button should turn the pupils into stars, which should be steerable
 - A button should turn the pupils into hearts, which should be steerable
-- A button should start a rolling-eyes animation (circular pupils)
 - A button should start a blink-eyes animation (circular pupils)
 - After blink-eyes or rolling-eyes, the pupils should go back to their previous shape (circles, stars, or hearts)
