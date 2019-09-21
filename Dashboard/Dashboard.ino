@@ -12,19 +12,18 @@
 #include "roundeyes.h"
 #include "stareyes.h"
 #include "blinkeyes.h"
-#include "roundroll.h"
 
 /*
  * For each button:
- * - button attached to pin 2 from +5V
- * - 10K resistor attached to pin 2 from ground
+ * - button attached to pin from +5V
+ * - 10K resistor attached to pin from ground
  */
 
 /* pin map
 
 [EYES] OE (output enable)         9
 [EYES] LAT (latch)               10
-[EYES] CLK (clock)               11
+[EYES] CLK (clock for Mega)      11
 [EYES] blue1 (upper) output      26
 [EYES] blue2 (bottom) output     29
 
@@ -33,11 +32,12 @@
 [EYES] row select C              A2
 [EYES] row select D              A3
 
+All eye pins not listed above are grounded
+
 round eyes button                 2
 star eyes button                  3
 heart eyes button                18
 blink button                     19
-roll eyes button                 20
 wheel                            A8
 */
 
@@ -60,19 +60,17 @@ RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE, false);
 #define HEART   2
 int eyeShape = CIRCLE;
 
+// Regular eye movement animation cells for round, star, and heart pupils
 const uint8_t* animations[3][10] = {
   { roundEye0, roundEye1, roundEye2, roundEye3, roundEye4, roundEye5, roundEye6, roundEye7, roundEye8, roundEye9 },
   { star0, star1, star2, star3, star4, star5, star6, star7, star8, star9 },
   { heartEye0, heartEye1, heartEye2, heartEye3, heartEye4, heartEye5, heartEye6, heartEye7, heartEye8, heartEye9 }
 };
 
+// Blink animation cells. Not all are used--some seem to cause an error (I'm looking at you, blink5)
 const uint8_t* blinkCells[12] = {
   blink0, blink1, blink2, blink3, blink4, blink5,
   blink6, blink7, blink8, blink9, blink10, blink11
-};
-
-const uint8_t* rollEyes[7] = {
-  roll0, roll1, roll2, roll3, roll4, roll5, roll6
 };
 
 const int window = 20;
@@ -89,21 +87,20 @@ int delayTime = 40;
 uint8_t *ptr;
 
 void setup() {
+  // Set button and wheel pins as inputs
   pinMode(MAIN_WHEEL, INPUT);
-  pinMode(FAST_LOOK_LEFT_BUTTON, INPUT);
-  pinMode(SLOW_LOOK_LEFT_BUTTON, INPUT);
-  pinMode(FAST_LOOK_RIGHT_BUTTON, INPUT);
-  pinMode(SLOW_LOOK_RIGHT_BUTTON, INPUT);
-  pinMode(FAST_ROLL_EYES_BUTTON, INPUT);
-  pinMode(SLOW_ROLL_EYES_BUTTON, INPUT);
+  pinMode(CIRCLE_EYE_BUTTON, INPUT);
+  pinMode(STAR_EYE_BUTTON, INPUT);
+  pinMode(HEART_EYE_BUTTON, INPUT);
+  pinMode(BLINK_BUTTON, INPUT);
 
-  attachInterrupt(digitalPinToInterrupt(FAST_LOOK_LEFT_BUTTON), fllCallback, RISING);
-  attachInterrupt(digitalPinToInterrupt(SLOW_LOOK_LEFT_BUTTON), sllCallback, RISING);
-  attachInterrupt(digitalPinToInterrupt(FAST_LOOK_RIGHT_BUTTON), flrCallback, RISING);
-  attachInterrupt(digitalPinToInterrupt(SLOW_LOOK_RIGHT_BUTTON), slrCallback, RISING);
-//  attachInterrupt(digitalPinToInterrupt(FAST_ROLL_EYES_BUTTON), freCallback, RISING);
-//  attachInterrupt(digitalPinToInterrupt(SLOW_ROLL_EYES_BUTTON), sreCallback, RISING);
+  // Hook up the interrupt function for each button
+  attachInterrupt(digitalPinToInterrupt(CIRCLE_EYE_BUTTON), circleCallback, RISING);
+  attachInterrupt(digitalPinToInterrupt(STAR_EYE_BUTTON), starCallback, RISING);
+  attachInterrupt(digitalPinToInterrupt(HEART_EYE_BUTTON), heartCallback, RISING);
+  attachInterrupt(digitalPinToInterrupt(BLINK_BUTTON), blinkCallback, RISING);
 
+  // Initialize the ring buffer for the eyes
   for (int i=0; i<window; i++) {
     mainWheelReadings[i] = 0;
   }
@@ -112,37 +109,24 @@ void setup() {
 
   // write eye background from images header
   memcpy_P(ptr, circle, IMG_SIZE);
-
-  Serial.begin(9600);
-  Serial.println("start");
+  
+  // Serial terminal--uncomment to add and read serial debug messages
+//  Serial.begin(9600);
+//  Serial.println("start");
   matrix.begin();
 }
 
 void loop() {
-  if (fllPressed()) {
+  if (circlePressed()) {
     Serial.println("circle");
     eyeShape = CIRCLE;
-//  } else if (sllPressed()) {
-//    Serial.println("star");
-//    eyeShape = STAR;
-  } else if (flrPressed()) {
+ } else if (starPressed()) {
+   Serial.println("star");
+   eyeShape = STAR;
+  } else if (heartPressed()) {
     Serial.println("heart");
     eyeShape = HEART;
-  } else if (sllPressed()) {
-    Serial.println("roll");
-    memcpy_P(ptr, rollEyes[0], IMG_SIZE);
-    delay(150);
-    memcpy_P(ptr, rollEyes[1], IMG_SIZE);
-    delay(60);
-    memcpy_P(ptr, rollEyes[2], IMG_SIZE);
-    delay(90);
-    memcpy_P(ptr, rollEyes[4], IMG_SIZE);
-    delay(220);
-    memcpy_P(ptr, rollEyes[2], IMG_SIZE);
-    delay(70);
-    memcpy_P(ptr, rollEyes[1], IMG_SIZE);
-    delay(40);
-  } else if (slrPressed()) {
+  } else if (blinkPressed()) {
     Serial.println("blink");
     memcpy_P(ptr, blinkCells[1], IMG_SIZE);
     delay(15);
@@ -163,19 +147,37 @@ void loop() {
     memcpy_P(ptr, blinkCells[1], IMG_SIZE);
     delay(15);
   }
-  
+
+  /* Main wheel is read synchronously on each loop, and then
+   * a low-pass filter (average of a ring buffer) is applied
+   * to smooth out movement. A larger window results in smoother
+   * movement, but slower response. A smaller window is more
+   * responsive, but jittery. Note that this is a combination of
+   * the window size and also the delay time. Window size must
+   * be constant, but delay time can be dynamic, and could be
+   * changed at runtime if you wanted to alter the animation to
+   * be more jittery (caffeinated?) vs laggy (sleepy?).
+   */
+
+  // Read the value from the analog-to-digital-converter (value
+  // will be between 0 and 1023
   mainWheel = analogRead(MAIN_WHEEL);
+  // Drop the oldest value in the ring buffer from the total
   mainWheelTotal = mainWheelTotal - mainWheelReadings[readIdx];
+  // Add the newly read value to the total
   mainWheelTotal = mainWheelTotal + mainWheel;
+  // Overwrite the oldest value in the ring buffer with the new one
   mainWheelReadings[readIdx] = mainWheel;
+  // Get the average
   mainWheelAvg = mainWheelTotal / window;
-  
+
   // for each pupil shape, there are 10 cells for lateral movement,
   // so the full range of wheel input is normalized to [0-9]
   x_position = ((mainWheelAvg * 9) / mainWheelMax);
-  
+
   memcpy_P(ptr, animations[eyeShape][x_position], IMG_SIZE);
   delay(delayTime);
-  
+
+  // Update the ring buffer index variable
   readIdx = (readIdx + 1) % window;
 }

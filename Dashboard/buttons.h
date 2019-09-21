@@ -2,139 +2,93 @@
 
 int debounceTime = 100;
 
-#define FAST_LOOK_LEFT_BUTTON  2   // circle eyes
-volatile bool fllButtonPressed = false;
-volatile unsigned long fllButtonTime = 0;
+#define CIRCLE_EYE_BUTTON  2   // circle eyes
+volatile bool circleButtonPressed = false;
+volatile unsigned long circleButtonTime = 0;
 
-void fllCallback()
+void circleCallback()
 {
-  if(digitalRead(FAST_LOOK_LEFT_BUTTON) == LOW)
+  if(digitalRead(CIRCLE_EYE_BUTTON) == LOW)
   {
-    fllButtonPressed = true;
-    fllButtonTime = millis();
+    circleButtonPressed = true;
+    circleButtonTime = millis();
   }
 }
 
-bool fllPressed()
+bool circlePressed()
 {
-  if(fllButtonPressed && millis() - fllButtonTime >= debounceTime)
+  if(circleButtonPressed && millis() - circleButtonTime >= debounceTime)
   {
-    fllButtonPressed = false;
+    circleButtonPressed = false;
     return true;
   }
   return false;
 }
 
-#define SLOW_LOOK_LEFT_BUTTON  3   // star eyes
-volatile bool sllButtonPressed = false;
-volatile unsigned long sllButtonTime = 0;
+#define STAR_EYE_BUTTON  3   // star eyes
+volatile bool starButtonPressed = false;
+volatile unsigned long starButtonTime = 0;
 
-void sllCallback()
+void starCallback()
 {
-  if(digitalRead(SLOW_LOOK_LEFT_BUTTON) == LOW)
+  if(digitalRead(STAR_EYE_BUTTON) == LOW)
   {
-    sllButtonPressed = true;
-    sllButtonTime = millis();
+    starButtonPressed = true;
+    starButtonTime = millis();
   }
 }
 
-bool sllPressed()
+bool starPressed()
 {
-  if(sllButtonPressed && millis() - sllButtonTime >= debounceTime)
+  if(starButtonPressed && millis() - starButtonTime >= debounceTime)
   {
-    sllButtonPressed = false;
+    starButtonPressed = false;
     return true;
   }
   return false;
 }
 
-#define FAST_LOOK_RIGHT_BUTTON 18  // heart eyes
-volatile bool flrButtonPressed = false;
-volatile unsigned long flrButtonTime = 0;
+#define HEART_EYE_BUTTON 18  // heart eyes
+volatile bool heartButtonPressed = false;
+volatile unsigned long heartButtonTime = 0;
 
-void flrCallback()
+void heartCallback()
 {
-  if(digitalRead(FAST_LOOK_RIGHT_BUTTON) == LOW)
+  if(digitalRead(HEART_EYE_BUTTON) == LOW)
   {
-    flrButtonPressed = true;
-    flrButtonTime = millis();
+    heartButtonPressed = true;
+    heartButtonTime = millis();
   }
 }
 
-bool flrPressed()
+bool heartPressed()
 {
-  if(flrButtonPressed && millis() - flrButtonTime >= debounceTime)
+  if(heartButtonPressed && millis() - heartButtonTime >= debounceTime)
   {
-    flrButtonPressed = false;
+    heartButtonPressed = false;
     return true;
   }
   return false;
 }
 
-#define SLOW_LOOK_RIGHT_BUTTON 19  // blink
-volatile bool slrButtonPressed = false;
-volatile unsigned long slrButtonTime = 0;
+#define BLINK_BUTTON 19  // blink
+volatile bool blinkButtonPressed = false;
+volatile unsigned long blinkButtonTime = 0;
 
-void slrCallback()
+void blinkCallback()
 {
-  if(digitalRead(SLOW_LOOK_RIGHT_BUTTON) == LOW)
+  if(digitalRead(BLINK_BUTTON) == LOW)
   {
-    slrButtonPressed = true;
-    slrButtonTime = millis();
+    blinkButtonPressed = true;
+    blinkButtonTime = millis();
   }
 }
 
-bool slrPressed()
+bool blinkPressed()
 {
-  if(slrButtonPressed && millis() - slrButtonTime >= debounceTime)
+  if(blinkButtonPressed && millis() - blinkButtonTime >= debounceTime)
   {
-    slrButtonPressed = false;
-    return true;
-  }
-  return false;
-}
-
-#define FAST_ROLL_EYES_BUTTON  21  // roll eyes
-volatile bool freButtonPressed = false;
-volatile unsigned long freButtonTime = 0;
-
-void freCallback()
-{
-  if(digitalRead(FAST_ROLL_EYES_BUTTON) == LOW)
-  {
-    freButtonPressed = true;
-    freButtonTime = millis();
-  }
-}
-
-bool frePressed()
-{
-  if(freButtonPressed && millis() - freButtonTime >= debounceTime)
-  {
-    freButtonPressed = false;
-    return true;
-  }
-  return false;
-}
-
-#define SLOW_ROLL_EYES_BUTTON  20  // sre
-volatile bool sreButtonPressed = false;
-volatile unsigned long sreButtonTime = 0;
-
-void sreCallback()
-{
-  if(digitalRead(SLOW_ROLL_EYES_BUTTON) == LOW)
-  {
-    sreButtonPressed = true;
-    sreButtonTime = millis();
-  }
-}
-
-bool srePressed()
-{
-  if(sreButtonPressed && millis() - sreButtonTime >= debounceTime)
-  {
-    sreButtonPressed = false;
+    blinkButtonPressed = false;
     return true;
   }
   return false;
