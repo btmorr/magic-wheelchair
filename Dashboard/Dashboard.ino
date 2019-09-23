@@ -15,10 +15,20 @@
 
 /*
  * For each button:
- * - button attached to pin from +5V
- * - 10K resistor attached to pin from ground
+ * - button attached to Arduino pin with internal pull-up resistor
+ * - other end of button connected to ground
+ *    +5V
+ *    |
+ *    |
+ *    X 10k   <- Internal Pull-up resistor
+ *    X
+ *    |________    <- Arduino Pin
+ *             |
+ *              /  <- Button Switch
+ *             |
+ *            _|_  <- Gnd
+ *             ¯
  */
-
 /* pin map
 
 [EYES] OE (output enable)         9
@@ -89,16 +99,16 @@ uint8_t *ptr;
 void setup() {
   // Set button and wheel pins as inputs
   pinMode(MAIN_WHEEL, INPUT);
-  pinMode(CIRCLE_EYE_BUTTON, INPUT);
-  pinMode(STAR_EYE_BUTTON, INPUT);
-  pinMode(HEART_EYE_BUTTON, INPUT);
-  pinMode(BLINK_BUTTON, INPUT);
+  pinMode(CIRCLE_EYE_BUTTON, INPUT_PULLUP);
+  pinMode(STAR_EYE_BUTTON, INPUT_PULLUP);
+  pinMode(HEART_EYE_BUTTON, INPUT_PULLUP);
+  pinMode(BLINK_BUTTON, INPUT_PULLUP);
 
   // Hook up the interrupt function for each button
-  attachInterrupt(digitalPinToInterrupt(CIRCLE_EYE_BUTTON), circleCallback, RISING);
-  attachInterrupt(digitalPinToInterrupt(STAR_EYE_BUTTON), starCallback, RISING);
-  attachInterrupt(digitalPinToInterrupt(HEART_EYE_BUTTON), heartCallback, RISING);
-  attachInterrupt(digitalPinToInterrupt(BLINK_BUTTON), blinkCallback, RISING);
+  attachInterrupt(digitalPinToInterrupt(CIRCLE_EYE_BUTTON), circleCallback, FALLING);
+  attachInterrupt(digitalPinToInterrupt(STAR_EYE_BUTTON), starCallback, FALLING);
+  attachInterrupt(digitalPinToInterrupt(HEART_EYE_BUTTON), heartCallback, FALLING);
+  attachInterrupt(digitalPinToInterrupt(BLINK_BUTTON), blinkCallback, FALLING);
 
   // Initialize the ring buffer for the eyes
   for (int i=0; i<window; i++) {
@@ -109,7 +119,7 @@ void setup() {
 
   // write eye background from images header
   memcpy_P(ptr, circle, IMG_SIZE);
-  
+
   // Serial terminal--uncomment to add and read serial debug messages
 //  Serial.begin(9600);
 //  Serial.println("start");
@@ -159,6 +169,7 @@ void loop() {
    * be more jittery (caffeinated?) vs laggy (sleepy?).
    */
 
+  unsigned long timeStamp = millis();
   // Read the value from the analog-to-digital-converter (value
   // will be between 0 and 1023
   mainWheel = analogRead(MAIN_WHEEL);
@@ -180,4 +191,6 @@ void loop() {
 
   // Update the ring buffer index variable
   readIdx = (readIdx + 1) % window;
+  timeStamp = millis() - timeStamp;
+  Serial.print("Loop time:"); Serial.println(timeStamp);
 }
