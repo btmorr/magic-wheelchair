@@ -37,7 +37,19 @@ for the buttons:
 | blink eyes button    |    19 |
 | steering wheel       |    A8 |
 
-## Actions
+We are using the [DFPlayer Mini](https://wiki.dfrobot.com/DFPlayer_Mini_SKU_DFR0299) for playing audio files. It takes serial commands as input and plays mono audio. Connections required as simply Vcc, Gnd, Rx (level shifted), Tx and speaker connections. The audio files are stored as .mp3 on the microSD card as described in the [manual](https://github.com/Arduinolibrary/DFPlayer_Mini_mp3/raw/master/DFPlayer%20Mini%20Manual.pdf)
+
+Wiring:
+| DFPlayer pin          | Mega pin  |
+| --------------------- | --------- |
+| Rx (via 1k res)       |       A11 |
+| Tx                    |       A12 |
+| Vcc                   |       +5V |
+| Gnd                   |       gnd |
+
+Other connections:
+Volume control potentiometer --> Mega Pin A5
+DFPlayer SPK+ & SPK- pins    --> Speaker + & - terminals (8ohm, 3W speaker)
 
 Requirements for input and behaviors:
 
@@ -47,3 +59,4 @@ Requirements for input and behaviors:
 - A button should turn the pupils into hearts, which should be steerable
 - A button should start a blink-eyes animation (circular pupils)
 - After blink-eyes or rolling-eyes, the pupils should go back to their previous shape (circles, stars, or hearts)
+- Each button press should trigger a distinct sound.
